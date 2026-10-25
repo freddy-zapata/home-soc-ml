@@ -1,0 +1,18 @@
+# Datos y registros (pueden contener informacion sensible)
+*.log
+*.json
+data/*.csv
+!data/attack_windows_template.csv
+data/raw/
+# Secretos
+.env
+*.pem
+*.key
+# Python
+__pycache__/
+.venv/
+*.pyc
+.ipynb_checkpoints/
+# Modelos pesados
+*.pkl
+*.joblib
