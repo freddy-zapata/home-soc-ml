@@ -4,10 +4,25 @@
 data/*.csv
 !data/attack_windows_template.csv
 data/raw/
+*.parquet
+*.pcap
+*.pcapng
 # Secretos
 .env
+.env.*
+!.env.example
 *.pem
 *.key
+*.crt
+client.keys
+# Certificados generados por wazuh-docker
+deploy/**/certs/
+deploy/**/config/wazuh_indexer_ssl_certs/
+# Copias de seguridad de configs
+*.bak
+*.orig
+# Notas privadas (nunca al repo)
+notas/
 # Python
 __pycache__/
 .venv/
@@ -16,3 +31,7 @@ __pycache__/
 # Modelos pesados
 *.pkl
 *.joblib
+*.pt
+# Sistema
+.DS_Store
+Thumbs.db
