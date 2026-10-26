@@ -26,6 +26,7 @@ Flujo: Sysmon/Windows + eve.json de Suricata -> agente Wazuh -> manager -> indic
 - `suricata/custom.rules`: regla propia para escaneo de puertos (MITRE T1046).
 - `data/attack_windows_template.csv`: plantilla para registrar las ventanas de ataque (etiquetado).
 - `ml/`: pipeline de ML (en desarrollo).
+- `wazuh/`: configuracion del manager (regla propia 100050) y del agente Windows usada en el lab.
 
 ## Metodologia de etiquetado
 
@@ -33,6 +34,18 @@ Las etiquetas **no** salen de lo que Wazuh marca como alerta, sino de un registr
 ataque (hora UTC de inicio y fin). Todo lo que ocurre fuera de esas ventanas se considera trafico normal.
 Para los eventos de red se usa la hora del evento (`flow.start`), no la de ingesta, porque los flujos
 se escriben con retraso.
+
+## Roadmap
+
+- [x] Laboratorio Wazuh + Suricata + Sysmon funcionando de punta a punta
+- [x] Generadores de trafico normal (limpio, variado, ruidoso)
+- [x] Regla propia de escaneo (sid 9000001, T1046)
+- [x] Configuracion del lab versionada (regla PowerShell 4104, FIM en tiempo real)
+- [ ] Dataset: trafico normal + ataques etiquetados (MITRE ATT&CK)
+- [ ] Modelos: Isolation Forest y autoencoder, evaluados contra la linea base de reglas
+- [ ] Servicio de scoring (FastAPI) + alertas por Telegram
+- [ ] Paquete Docker Compose + prueba de instalacion en VM limpia
+- [ ] Honeypot OpenCanary en Raspberry Pi
 
 ## Aviso
 
