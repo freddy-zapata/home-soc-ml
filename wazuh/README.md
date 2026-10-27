@@ -1,65 +1,68 @@
 # wazuh/
 
-Configuracion de Wazuh usada en el laboratorio. Es la configuracion **congelada** con la que se
-genera el dataset oficial (T0 = `2026-10-26T18:30:00Z`): no se modifica hasta cerrar la recoleccion.
+Wazuh configuration used in the lab. This is the **frozen** configuration used to collect the official
+dataset (T0 = `2026-10-26T18:30:00Z`): it is not changed until data collection is closed.
 
-| Archivo | Va en | Maquina |
+| File | Goes to | Machine |
 |---|---|---|
 | `manager/local_rules.xml` | `/var/ossec/etc/rules/local_rules.xml` | Ubuntu (Wazuh manager) |
-| `agent-windows/ossec.conf` | `C:\Program Files (x86)\ossec-agent\ossec.conf` | Windows victima (agente) |
+| `agent-windows/ossec.conf` | `C:\Program Files (x86)\ossec-agent\ossec.conf` | Windows victim (agent) |
 
-## Marcadores
+Both files are exact copies of the lab configuration, except for the IP placeholders below. Rule
+descriptions are kept in Spanish because that is the text deployed in the lab and shown in the alerts.
 
-Las IPs reales se reemplazaron por marcadores en MAYUSCULAS. Antes de usar un archivo, cambia cada
-marcador por el valor de tu red:
+## Placeholders
 
-| Marcador | Que es |
+Real IP addresses were replaced with UPPERCASE placeholders. Before using a file, replace each
+placeholder with the value for your network:
+
+| Placeholder | Meaning |
 |---|---|
-| `WAZUH_MANAGER_IP` | IP del Wazuh manager al que se conecta el agente |
+| `WAZUH_MANAGER_IP` | IP address of the Wazuh manager the agent connects to |
 
-En la victima (PowerShell como administrador), por ejemplo:
+On the victim (PowerShell as administrator), for example:
 
 ```powershell
 (Get-Content .\ossec.conf) -replace 'WAZUH_MANAGER_IP','10.0.0.10' | Set-Content .\ossec.conf
 ```
 
-## Que se cambio respecto a la config por defecto
+## Changes from the default configuration
 
 **Manager — `local_rules.xml`**
-- Regla **100050** (nivel 10, MITRE **T1059.001**): alerta cuando un evento **4104** (PowerShell Script
-  Block Logging) contiene `Invoke-RestMethod`, `Invoke-WebRequest`, `Compress-Archive`,
-  `Net.WebClient`, `DownloadString`, `EncodedCommand` o `-enc`.
-- La regla 100001 es el ejemplo que trae Wazuh de fabrica; se deja para que el archivo sea identico al del lab.
+- Rule **100050** (level 10, MITRE **T1059.001**): alerts when an event **4104** (PowerShell Script
+  Block Logging) contains `Invoke-RestMethod`, `Invoke-WebRequest`, `Compress-Archive`,
+  `Net.WebClient`, `DownloadString`, `EncodedCommand` or `-enc`.
+- Rule 100001 is the example shipped with Wazuh; it is kept so the file is identical to the lab's.
 
-**Agente Windows — `ossec.conf`**
-- `<client_buffer>`: `queue_size` 50000 (el valor por defecto se saturaba con Suricata).
-- `<localfile>` del `eve.json` de Suricata (`C:\Program Files\Suricata\log\eve.json`, formato json).
-- `<localfile>` del canal **Sysmon** (`Microsoft-Windows-Sysmon/Operational`).
-- `<localfile>` del canal **PowerShell** (`Microsoft-Windows-PowerShell/Operational`, evento 4104).
-  Requiere activar *Script Block Logging* en la victima.
-- `<syscheck>`: FIM en **tiempo real** sobre `C:\Users\Public` y `C:\Windows\Temp` (`check_all`).
+**Windows agent — `ossec.conf`**
+- `<client_buffer>`: `queue_size` 50000 (the default value overflowed with Suricata).
+- `<localfile>` for the Suricata `eve.json` (`C:\Program Files\Suricata\log\eve.json`, json format).
+- `<localfile>` for the **Sysmon** channel (`Microsoft-Windows-Sysmon/Operational`).
+- `<localfile>` for the **PowerShell** channel (`Microsoft-Windows-PowerShell/Operational`, event 4104).
+  Requires Script Block Logging to be enabled on the victim.
+- `<syscheck>`: **real-time** FIM on `C:\Users\Public` and `C:\Windows\Temp` (`check_all`).
 
-## Aplicar los cambios
+## Applying the changes
 
 Ubuntu (manager):
 ```bash
 sudo cp local_rules.xml /var/ossec/etc/rules/local_rules.xml
-sudo /var/ossec/bin/wazuh-logtest      # opcional: probar con un evento 4104
+sudo /var/ossec/bin/wazuh-logtest      # optional: test with a 4104 event
 sudo systemctl restart wazuh-manager
 ```
 
-Windows victima (PowerShell como administrador):
+Windows victim (PowerShell as administrator):
 ```powershell
 Copy-Item .\ossec.conf "C:\Program Files (x86)\ossec-agent\ossec.conf"
 Restart-Service WazuhSvc
 ```
 
-## Limitaciones conocidas (linea base de reglas)
+## Known limitations (rule-based baseline)
 
-- La 100050 tambien dispara con el trafico **benigno** del generador `generate_varied_traffic.ps1`
-  (usa `Invoke-WebRequest` y `Compress-Archive`): es un falso positivo esperado de la linea base.
-- El patron `-enc` tambien coincide con `-Encoding` (p. ej. `Out-File -Encoding utf8`).
+- Rule 100050 also fires on the **benign** traffic of `generate_varied_traffic.ps1`
+  (it uses `Invoke-WebRequest` and `Compress-Archive`): an expected false positive of the baseline.
+- The `-enc` pattern also matches `-Encoding` (e.g. `Out-File -Encoding utf8`).
 
-Esto es intencional para el proyecto: la linea base son las reglas estaticas tal como se usarian en
-la practica, y la capa de ML se evalua por cuanto reduce estos falsos positivos. Las etiquetas del
-dataset salen de `data/attack_windows.csv`, nunca de las alertas de Wazuh.
+This is intentional: the baseline is the set of static rules as they would be used in practice, and
+the ML layer is evaluated by how much it reduces these false positives. Dataset labels come from the
+attack execution log, never from Wazuh alerts.

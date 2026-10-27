@@ -1,2 +1,3 @@
-# Regla personalizada: deteccion de posible escaneo de puertos (T1046)
+# Custom rule: possible port scan detection (T1046).
+# The msg text is kept in Spanish because it is the exact rule deployed in the lab.
 alert tcp any any -> $HOME_NET any (msg:"CUSTOM SCAN Posible escaneo de puertos (Nmap)"; flags:S; threshold:type both, track by_src, count 20, seconds 10; classtype:attempted-recon; sid:9000001; rev:1; metadata:mitre_tactic_id TA0007, mitre_tactic_name Discovery, mitre_technique_id T1046, mitre_technique_name Network_Service_Scanning;)

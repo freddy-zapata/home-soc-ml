@@ -1,4 +1,4 @@
-# Plantilla. Horas en UTC (ISO 8601). Todo lo que quede fuera de estas ventanas se etiqueta como normal.
-# Guarda tu copia real como data/attack_windows.csv (esta en .gitignore).
+# Template. Times in UTC (ISO 8601). Everything outside these windows is labelled as benign.
+# Save your real copy as data/attack_windows.csv (it is in .gitignore).
 attack_id,start_utc,end_utc,technique_id,technique_name,tool,source_host,target_host,notes
-A001,2026-10-23T14:05:00Z,2026-10-23T14:12:00Z,T1046,Network Service Scanning,nmap,kali,victima-win,"nmap -sS -p- objetivo"
+A001,2026-10-23T14:05:00Z,2026-10-23T14:12:00Z,T1046,Network Service Scanning,nmap,kali,victima-win,"nmap -sS -p- target"

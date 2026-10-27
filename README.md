@@ -1,57 +1,56 @@
-# Home SOC + Deteccion de Anomalias con Machine Learning
+# Home SOC + Anomaly Detection with Machine Learning
 
-Laboratorio de un SOC casero con **Wazuh (HIDS/SIEM)**, **Suricata (NIDS)** y **Sysmon**, al que se
-anade una capa de **deteccion de anomalias con ML** para reducir los falsos positivos de las
-reglas estaticas.
+A home SOC lab built with **Wazuh (HIDS/SIEM)**, **Suricata (NIDS)** and **Sysmon**, extended with a
+**machine learning anomaly detection layer** to reduce the false positives produced by static rules.
 
-> Estado: en desarrollo. Recoleccion de telemetria y generacion de trafico normal funcionando;
-> pipeline de ML y evaluacion con ataques etiquetados en curso.
+> Status: in development. Telemetry collection and benign traffic generation are working;
+> the ML pipeline and the evaluation with labelled attacks are in progress.
 
-## Arquitectura
+## Architecture
 
-| Componente | Rol |
+| Component | Role |
 |---|---|
 | Ubuntu Server | Wazuh manager + indexer + dashboard (all-in-one) |
-| Windows (victima) | Agente Wazuh, Sysmon y Suricata (Npcap) |
-| Kali Linux | Generacion de ataques (Nmap, fuerza bruta, Atomic Red Team) |
+| Windows (victim) | Wazuh agent, Sysmon and Suricata (Npcap) |
+| Kali Linux | Attack generation (Nmap, brute force, Atomic Red Team) |
 
-Flujo: Sysmon/Windows + eve.json de Suricata -> agente Wazuh -> manager -> indices `wazuh-alerts-*` y
-`wazuh-archives-*` -> features -> modelo de anomalias -> alerta.
+Flow: Sysmon/Windows + Suricata `eve.json` -> Wazuh agent -> manager -> `wazuh-alerts-*` and
+`wazuh-archives-*` indices -> features -> anomaly model -> alert.
 
-## Contenido
+## Contents
 
-- `docs/SOC-ML-Lab-Guia-Completa.md`: guia paso a paso para reproducir el laboratorio.
-- `scripts/windows/`: tres generadores de trafico normal (limpio, variado con ritmo diurno y ruidoso que
-  provoca falsos positivos de las reglas estaticas).
-- `suricata/custom.rules`: regla propia para escaneo de puertos (MITRE T1046).
-- `data/attack_windows_template.csv`: plantilla para registrar las ventanas de ataque (etiquetado).
-- `ml/`: pipeline de ML (en desarrollo).
-- `wazuh/`: configuracion del manager (regla propia 100050) y del agente Windows usada en el lab.
+- `docs/SOC-ML-Lab-Guide.md`: step-by-step guide to reproduce the lab.
+- `scripts/windows/`: three benign traffic generators (clean, varied with a day/night rhythm, and noisy,
+  which triggers false positives in the static rules).
+- `suricata/custom.rules`: custom port scan rule (MITRE T1046).
+- `data/attack_windows_template.csv`: template for recording attack windows (labelling).
+- `ml/`: ML pipeline (incomplete prototype, see `ml/README.md`).
+- `wazuh/`: manager configuration (custom rule 100050) and Windows agent configuration used in the lab.
 
-## Metodologia de etiquetado
+## Labelling methodology
 
-Las etiquetas **no** salen de lo que Wazuh marca como alerta, sino de un registro manual de ventanas de
-ataque (hora UTC de inicio y fin). Todo lo que ocurre fuera de esas ventanas se considera trafico normal.
-Para los eventos de red se usa la hora del evento (`flow.start`), no la de ingesta, porque los flujos
-se escriben con retraso.
+Labels do **not** come from what Wazuh flags as an alert. They come from a manual log of attack
+executions (UTC start and end time). Everything outside those executions is treated as benign activity.
+Network events use the event time (`flow.start`), not the ingestion time, because flows are written
+with a delay.
 
 ## Roadmap
 
-- [x] Laboratorio Wazuh + Suricata + Sysmon funcionando de punta a punta
-- [x] Generadores de trafico normal (limpio, variado, ruidoso)
-- [x] Regla propia de escaneo (sid 9000001, T1046)
-- [x] Configuracion del lab versionada (regla PowerShell 4104, FIM en tiempo real)
-- [ ] Dataset: trafico normal + ataques etiquetados (MITRE ATT&CK)
-- [ ] Modelos: Isolation Forest y autoencoder, evaluados contra la linea base de reglas
-- [ ] Servicio de scoring (FastAPI) + alertas por Telegram
-- [ ] Paquete Docker Compose + prueba de instalacion en VM limpia
-- [ ] Honeypot OpenCanary en Raspberry Pi
+- [x] Wazuh + Suricata + Sysmon lab working end to end
+- [x] Benign traffic generators (clean, varied, noisy)
+- [x] Custom scan rule (sid 9000001, T1046)
+- [x] Lab configuration under version control (PowerShell 4104 rule, real-time FIM)
+- [ ] Dataset: benign activity + labelled attacks (MITRE ATT&CK)
+- [ ] Models: Isolation Forest and autoencoder, evaluated against the rule-based baseline
+- [ ] Scoring service (FastAPI) + Telegram notifications
+- [ ] Docker Compose package + installation test on a clean VM
+- [ ] OpenCanary honeypot on a Raspberry Pi
 
-## Aviso
+## Disclaimer
 
-Proyecto educativo. Los ataques se ejecutan unicamente contra maquinas propias dentro de un laboratorio
-aislado. No uses estas tecnicas contra sistemas sin autorizacion expresa.
+Educational project. Attacks are run only against machines owned by the author inside an isolated lab.
+Do not use these techniques against any system without explicit authorization.
 
-## Licencia
+## License
 
 MIT
