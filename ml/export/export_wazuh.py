@@ -32,7 +32,7 @@ import pandas as pd
 
 warnings.filterwarnings("ignore")  # certificado self-signed del lab
 
-HOST = os.environ.get("WAZUH_HOST", "https://192.168.119.153:9200")
+HOST = os.environ.get("WAZUH_HOST", "https://WAZUH_MANAGER_IP:9200")
 USER = os.environ.get("WAZUH_USER", "admin")
 PASS = os.environ.get("WAZUH_PASS")
 INDEX = "wazuh-archives-*"
