@@ -1,4 +1,7 @@
-# Template. Times in UTC (ISO 8601). Everything outside these windows is labelled as benign.
-# Save your real copy as data/attack_windows.csv (it is in .gitignore).
-attack_id,start_utc,end_utc,technique_id,technique_name,tool,source_host,target_host,notes
-A001,2026-10-23T14:05:00Z,2026-10-23T14:12:00Z,T1046,Network Service Scanning,nmap,kali,victima-win,"nmap -sS -p- target"
+# Attack registry template. Times in UTC (ISO 8601, Z). Protocol v0.2 schema.
+# status: attempted | executed | failed. Only "executed" produces label=1.
+# target_host matches the agent (agent_id or agent name). Everything outside
+# executed windows is benign; prep/cleanup/attempted/failed are EXCLUDED.
+# Keep your real copy as data/attack_windows.csv (it is in .gitignore).
+attack_id,technique_id,atomic_test_guid,atomic_version,target_host,start_utc,end_utc,status,expected_evidence,observed_evidence,cleanup_end_utc,excluded_until_utc,session_id,notes
+A001,T1046,,,victima-win,2026-10-27T14:05:00Z,2026-10-27T14:12:00Z,executed,"Suricata 9000001; many unique dports","",2026-10-27T14:20:00Z,,S-A,"nmap -sS from kali"
