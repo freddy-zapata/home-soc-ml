@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1260 560" width="1260" height="560" role="img" aria-labelledby="t d" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif">
+<title id="t">Home SOC lab architecture</title>
+<desc id="d">Inside an isolated VMware NAT network, a Windows victim sends telemetry to a Wazuh SIEM on Ubuntu; this part is working. Attacks from Kali and Atomic Red Team are planned. Events are exported to an ML layer on the host; export and features are prototypes, models and scoring are planned.</desc>
+<style>
+:root{--bg:#ffffff;--tx:#1f2328;--mut:#59636e;--line:#d0d7de;--card:#f6f8fa;--zone:#fbfcfd;--red:#cf222e;--blue:#0969da;--grn:#1a7f37;--amb:#9a6700;--gry:#6e7781;--ambf:#fff8e1;--grnf:#e9f7ee}
+@media (prefers-color-scheme:dark){:root{--bg:#0d1117;--tx:#e6edf3;--mut:#9198a1;--line:#30363d;--card:#161b22;--zone:#10151c;--red:#ff7b72;--blue:#58a6ff;--grn:#3fb950;--amb:#d29922;--gry:#8b949e;--ambf:#2a2212;--grnf:#10261a}}
+.bg{fill:var(--bg)}.t{fill:var(--tx)}.m{fill:var(--mut)}
+.h{font-size:21px;font-weight:700}.b{font-size:15px}.s{font-size:13px;font-weight:700;letter-spacing:1.4px}.l{font-size:14px;font-weight:600}
+.frame{fill:none;stroke:var(--line);stroke-width:1.5}
+.zone{fill:var(--zone);stroke:var(--gry);stroke-width:1.5;stroke-dasharray:7 6}
+.card{fill:var(--card);stroke:var(--line);stroke-width:1.5}
+.atk{stroke:var(--red)}.tel{stroke:var(--blue)}.exp{stroke:var(--amb)}
+.flow{fill:none;stroke-width:3;stroke-dasharray:9 7;animation:f 1.1s linear infinite}
+.lnk{fill:none;stroke:var(--gry);stroke-width:2}
+.okd{fill:var(--grn)}.prd{fill:var(--amb)}.pld{fill:none;stroke:var(--gry);stroke-width:2;stroke-dasharray:3 2}
+.pr{fill:var(--ambf);stroke:var(--amb);stroke-width:1.5}
+.pl{fill:none;stroke:var(--gry);stroke-width:1.5;stroke-dasharray:6 5}
+@keyframes f{to{stroke-dashoffset:-32}}
+@media (prefers-reduced-motion:reduce){.flow{animation:none}}
+</style>
+<defs>
+<marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#cf222e"/></marker>
+<marker id="ab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#2f81f7"/></marker>
+<marker id="aa" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#b58105"/></marker>
+<marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#7d8590"/></marker>
+</defs>
+<rect class="bg" width="1260" height="560" rx="14"/>
+<rect class="frame" x="16" y="16" width="1228" height="528" rx="14"/>
+<text class="t h" x="40" y="54">Home SOC + ML anomaly detection</text>
+<text class="m b" x="40" y="78">Windows host with VMware Workstation</text>
+
+<!-- NAT -->
+<rect class="zone" x="40" y="100" width="830" height="420" rx="12"/>
+<text class="m s" x="62" y="130">VMNET8 NAT · ISOLATED FROM THE HOME NETWORK</text>
+
+<!-- Kali -->
+<rect class="card" style="stroke-dasharray:6 5;stroke:var(--gry)" x="62" y="155" width="215" height="340" rx="10"/>
+<rect x="62" y="155" width="215" height="6" rx="3" fill="var(--red)"/>
+<text class="s" fill="var(--red)" x="80" y="192">ATTACKER</text>
+<text font-size="11" font-weight="700" letter-spacing="1" text-anchor="end" fill="var(--gry)" x="263" y="191">PLANNED</text>
+<text class="t h" x="80" y="222">Kali Linux</text>
+<text class="t b" x="80" y="262">Nmap scans</text>
+<text class="t b" x="80" y="290">Brute force</text>
+
+<line x1="80" y1="400" x2="259" y2="400" stroke="var(--line)"/>
+<text class="m l" x="80" y="428">Ground truth</text>
+<text class="t b" x="80" y="452">Attack log in UTC</text>
+
+<!-- Victim -->
+<rect class="card" x="347" y="155" width="215" height="340" rx="10"/>
+<rect x="347" y="155" width="215" height="6" rx="3" fill="var(--blue)"/>
+<text class="s" fill="var(--blue)" x="365" y="192">VICTIM</text>
+<text font-size="11" font-weight="700" letter-spacing="1" text-anchor="end" fill="var(--grn)" x="548" y="191">WORKING</text>
+<text class="t h" x="365" y="222">Windows</text>
+<text class="t b" x="365" y="262">Sysmon</text>
+<text class="t b" x="365" y="290">Suricata NIDS (Npcap)</text>
+<text class="t b" x="365" y="318">Wazuh agent</text>
+<text class="t b" x="365" y="346">Atomic Red Team <tspan class="m" font-size="12">(planned)</tspan></text>
+<text class="t b" x="365" y="374">Benign traffic generators</text>
+<line x1="365" y1="400" x2="544" y2="400" stroke="var(--line)"/>
+<text class="m l" x="365" y="428">Custom rule</text>
+<text class="t b" x="365" y="452">sid 9000001 · T1046</text>
+
+<!-- Ubuntu -->
+<rect class="card" x="632" y="155" width="215" height="340" rx="10"/>
+<rect x="632" y="155" width="215" height="6" rx="3" fill="var(--grn)"/>
+<text class="s" fill="var(--grn)" x="650" y="192">SIEM</text>
+<text font-size="11" font-weight="700" letter-spacing="1" text-anchor="end" fill="var(--grn)" x="833" y="191">WORKING</text>
+<text class="t h" x="650" y="222">Ubuntu Server</text>
+<text class="t b" x="650" y="262">Wazuh manager</text>
+<text class="t b" x="650" y="290">Wazuh indexer</text>
+<text class="t b" x="650" y="318">Wazuh dashboard</text>
+<line x1="650" y1="344" x2="829" y2="344" stroke="var(--line)"/>
+<text class="m l" x="650" y="372">Custom rule</text>
+<text class="t b" x="650" y="396">100050 · T1059.001</text>
+
+<!-- flows -->
+<text class="l" fill="var(--red)" x="312" y="322" text-anchor="middle">attacks</text>
+<text class="m" font-size="12" x="312" y="339" text-anchor="middle">planned</text>
+<path class="atk" style="fill:none;stroke-width:3;stroke-dasharray:4 7" d="M280 352H342" marker-end="url(#ar)"/>
+<text class="l" fill="var(--blue)" x="597" y="338" text-anchor="middle">events</text>
+<path class="flow tel" d="M565 352H627" marker-end="url(#ab)"/>
+<text class="l" fill="var(--amb)" x="899" y="176" text-anchor="middle">export</text>
+<path class="flow exp" d="M850 200H925" marker-end="url(#aa)"/>
+
+<!-- ML -->
+<text class="m s" x="928" y="130">ML LAYER · ON THE HOST</text>
+<rect class="pr" x="928" y="155" width="292" height="70" rx="10"/>
+<text class="t l" x="946" y="184">Export to Parquet</text>
+<text class="m b" x="946" y="207">export_wazuh.py</text>
+<text font-size="11" font-weight="700" letter-spacing="1" text-anchor="end" fill="var(--amb)" x="1206" y="179">PROTOTYPE</text>
+<path class="lnk" d="M1074 225V244" marker-end="url(#ag)"/>
+<rect class="pr" x="928" y="245" width="292" height="70" rx="10"/>
+<text class="t l" x="946" y="274">Features per host, 5 min</text>
+<text class="m b" x="946" y="297">build_features.py</text>
+<text font-size="11" font-weight="700" letter-spacing="1" text-anchor="end" fill="var(--amb)" x="1206" y="269">PROTOTYPE</text>
+<path class="lnk" d="M1074 315V334" marker-end="url(#ag)"/>
+<rect class="pl" x="928" y="335" width="292" height="70" rx="10"/>
+<text class="t l" x="946" y="364">Anomaly models</text>
+<text class="m b" x="946" y="387">Isolation Forest, autoencoder</text>
+<text font-size="11" font-weight="700" letter-spacing="1" text-anchor="end" fill="var(--gry)" x="1206" y="359">PLANNED</text>
+<path class="lnk" d="M1074 405V424" marker-end="url(#ag)"/>
+<rect class="pl" x="928" y="425" width="292" height="70" rx="10"/>
+<text class="t l" x="946" y="454">Scoring + alerts</text>
+<text class="m b" x="946" y="477">FastAPI, Telegram</text>
+<text font-size="11" font-weight="700" letter-spacing="1" text-anchor="end" fill="var(--gry)" x="1206" y="449">PLANNED</text>
+</svg>
