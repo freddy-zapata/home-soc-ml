@@ -10,9 +10,10 @@
 A home SOC lab built with **Wazuh (HIDS/SIEM)**, **Suricata (NIDS)** and **Sysmon**, being extended with a
 **machine learning anomaly detection layer** to reduce the false positives produced by static rules.
 
-> **Status: in development.** Telemetry collection and benign traffic generation are working.
-> No attacks have been run in the lab yet. The ML pipeline is an unvalidated prototype, so this project has
-> **no detection metrics yet**.
+> **Status: in development.** Telemetry collection and benign traffic generation are working. The event
+> export and feature extraction steps have run end to end on a real slice of lab data and are covered by
+> reproducible tests. No attacks have been run in the lab yet and no model has been trained, so this
+> project has **no detection metrics yet**.
 
 ---
 
@@ -28,7 +29,7 @@ The lab runs on a Windows host with VMware Workstation, in a NAT network isolate
 | **Windows (victim)** | Wazuh agent, Sysmon, Suricata (Npcap) and benign traffic generators | ✅ Working |
 | **Atomic Red Team** | Adversary techniques executed on the Windows victim | 🕓 Planned |
 | **Kali Linux** | Network attacks (Nmap, brute force) | 🕓 Planned |
-| **ML layer** | Runs on the host, outside the VMs | 🚧 Prototype |
+| **ML layer** | Runs on the host, outside the VMs | 🚧 Export and features validated; models not written |
 
 ### Data flow
 
@@ -36,7 +37,7 @@ The lab runs on a Windows host with VMware Workstation, in a NAT network isolate
 flowchart TB
   subgraph C["1. Telemetry: working"]
     direction LR
-    A["Sysmon + Windows channels"] --> X["Wazuh agent"]
+    A["Sysmon + Windows channels + FIM"] --> X["Wazuh agent"]
     B["Suricata eve.json"] --> X
     X --> D["Wazuh manager"]
     D --> E[("wazuh-alerts-*<br/>wazuh-archives-*")]
@@ -51,14 +52,13 @@ flowchart TB
   classDef ok fill:#d1f2dc,stroke:#1a7f37,color:#0b3d1c
   classDef proto fill:#fff1c7,stroke:#bf8700,color:#4d3700
   classDef plan fill:#eceff3,stroke:#6e7781,color:#30363d,stroke-dasharray:5 4
-  class A,B,X,D,E ok
-  class F,G proto
+  class A,B,X,D,E,F,G ok
   class H,I plan
   style C fill:transparent,stroke:#6e7781
   style P fill:transparent,stroke:#6e7781
 ```
 
-Green: working. Amber: prototype pending validation. Grey: planned.
+Green: working (export and features validated on a real slice of lab data). Grey: planned.
 
 ---
 
@@ -67,16 +67,18 @@ Green: working. Amber: prototype pending validation. Grey: planned.
 ```
 home-soc-ml/
 ├── data/
-│   └── attack_windows_template.csv   # Template to log attack windows (labelling)
+│   └── attack_windows_template.csv   # Attack registry template, schema v0.2 (labelling)
 ├── docs/
 │   ├── images/architecture.svg       # Architecture diagram
 │   └── SOC-ML-Lab-Guide.md           # Step-by-step guide to reproduce the lab
-├── ml/                               # ML pipeline (incomplete prototype)
+├── ml/                               # ML pipeline (export and features; models pending)
 │   ├── export/export_wazuh.py        # Exports Wazuh events to Parquet
 │   ├── features/build_features.py    # Builds features per host and 5-minute window
 │   ├── features/FEATURES.md          # Versioned list of model features
+│   ├── tests/test_pipeline.py        # Reproducible tests for the review fixes
+│   ├── archive/                      # Versions exactly as reviewed (do not run)
 │   ├── requirements.txt
-│   └── README.md                     # Prototype status and review findings
+│   └── README.md                     # Pipeline status, how to run it and review findings
 ├── scripts/windows/                  # Benign traffic generators
 ├── suricata/custom.rules             # Custom port scan rule
 ├── wazuh/
@@ -129,28 +131,33 @@ Rule `100050` also fires on benign traffic. This is intentional and documented i
 
 | Stage | Status |
 |---|---|
-| Export events from the Wazuh indexer | 🚧 Review fixes applied, pending validation |
-| Features per host and 5-minute window | 🚧 Review fixes applied, pending validation |
+| Export events from the Wazuh indexer | ✅ Validated on a real slice of lab data |
+| Features per host and 5-minute window | ✅ Validated on a real slice of lab data |
+| Reproducible tests for the review fixes | ✅ Passing |
 | Isolation Forest and autoencoder | 🕓 Not written yet |
 | FastAPI scoring and Telegram notifications | 🕓 Not written yet |
 
-See [`ml/README.md`](ml/README.md) for the review findings.
+See [`ml/README.md`](ml/README.md) for how to run the pipeline and the review findings.
 
 ---
 
 ## 🏷️ Labelling Methodology
 
-Labels do **not** come from what Wazuh flags as an alert. They will come from a manual log of attack
-executions (UTC start and end time). Everything outside those executions is treated as benign activity.
+Labels do **not** come from what Wazuh flags as an alert. They come from a manual registry of attack
+executions (one row per run, with its Atomic test GUID, target host, UTC start and end, and status).
+Only runs with status `executed` produce attack labels, and only for the target host. Preparation,
+cleanup, attempted and failed periods are excluded from both classes. Everything else is treated as
+benign activity.
 Network events use the event time (`flow.start`), not the ingestion time, because flows are written
 with a delay.
 
 ```mermaid
 flowchart LR
-  A["Manual attack log<br/>UTC start and end"] --> C{"5-min window overlaps<br/>an attack?"}
+  A["Attack registry<br/>executed runs, UTC"] --> C{"Window of the target host<br/>overlaps an executed run?"}
   B["Features per host<br/>by event time"] --> C
   C -- yes --> D["Label: attack"]
   C -- no --> Z["Label: benign"]
+  C -. "prep, cleanup,<br/>attempted, failed" .-> X["Excluded"]
   D --> F["Evaluate against<br/>the rule baseline"]
   Z --> F
   W["Wazuh alerts"] -. "never used as labels" .-x C
@@ -161,7 +168,7 @@ flowchart LR
   class A,B,C,F vic
   class D atk
   class Z ok
-  class W plan
+  class W,X plan
 ```
 
 ---
@@ -171,7 +178,8 @@ flowchart LR
 - [x] Wazuh + Suricata + Sysmon telemetry working end to end
 - [x] Benign traffic generators (clean, varied, noisy)
 - [x] Custom scan rule (sid 9000001, T1046)
-- [x] Lab configuration under version control (PowerShell 4104 rule, real-time FIM)
+- [x] Lab configuration under version control (PowerShell 4104 rule, real-time FIM incl. Documents/Downloads)
+- [x] Export and feature pipeline validated on real lab data, with reproducible tests
 - [ ] Run attacks in the lab: Nmap, brute force and Atomic Red Team
 - [ ] Dataset: benign activity + labelled attacks (MITRE ATT&CK)
 - [ ] Models: Isolation Forest and autoencoder, evaluated against the rule-based baseline
