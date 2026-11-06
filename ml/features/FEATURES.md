@@ -1,48 +1,55 @@
-# FEATURES — HomeSOC ML (v1, 2026-10-27)
+# FEATURES — HomeSOC ML (v2, 2026-10-27)
 
-Lista versionada de características. Fuente de verdad del **modelo principal**:
-la constante `MODEL_FEATURES` en `build_features.py` debe coincidir con esta tabla.
+Versioned feature list. Source of truth for the **main model**: the
+`MODEL_FEATURES` constant in `build_features.py` must match this table.
 
-## Unidad
-- **Entidad** = `agent_id` (un Windows instrumentado). Nunca se mezclan equipos.
-- **Ventana** = 5 min, alineada al reloj (00,05,10…), por **hora del evento**
-  (`event_time`), no por hora de ingesta.
-- `available_at` (hora de ingesta) se conserva en el crudo para la causalidad
-  temporal (protocolo §9); **no** es una característica.
+## Unit
+- **Entity** = `agent_id` (one instrumented Windows host). Hosts are never mixed.
+- **Window** = 5 min, clock-aligned (00,05,10…), by **event time** (`event_time`),
+  not ingest time.
+- `available_at` (ingest time) is kept in the raw data and **applied as a causal
+  cutoff**: an event feeds a window only if available by `window_close + grace`
+  (default 10 min). It is not a feature itself.
 
-## Características del modelo (entran al IF / autoencoder)
+## Model features (fed to IF / autoencoder)
 
-| Columna | Qué mide | Fuente |
+| Column | Meaning | Source |
 |---|---|---|
-| `n_events` | eventos totales en la ventana | todas |
-| `n_win_events` | eventos de host (EventChannel) | Windows |
-| `n_suri_events` | eventos de red | Suricata |
-| `proc_creates` | procesos creados (EventID 1 **en canal Sysmon**) | Sysmon |
-| `img_unique` | imágenes de proceso distintas | Sysmon |
-| `logon_fail` | logons fallidos (4625 **en canal Security**) | Security |
-| `logon_ok` | logons exitosos (4624 **en canal Security**) | Security |
-| `ps_blocks` | bloques de script PowerShell (4104) | PowerShell |
-| `ps_len_max` | longitud máx. de scriptBlockText | PowerShell |
-| `dst_ip_unique` | IPs destino distintas | Suricata |
-| `dport_unique` | puertos destino distintos | Suricata |
-| `dns_unique` | dominios consultados distintos (v2+v3) | Suricata |
-| `tls_unique` | SNI TLS distintos | Suricata |
-| `http_reqs` | peticiones HTTP | Suricata |
-| `flow_out` | bytes salientes (**solo eventos `flow`**) | Suricata |
-| `flow_in` | bytes entrantes (**solo eventos `flow`**) | Suricata |
+| `n_win_events` | host events (EventChannel) in the window | Windows |
+| `n_suri_events` | network events in the window | Suricata |
+| `proc_creates` | process creations (EventID 1 **on the Sysmon channel**) | Sysmon |
+| `img_unique` | distinct process images | Sysmon |
+| `logon_fail` | failed logons (4625 **on the Security channel**) | Security |
+| `logon_ok` | successful logons (4624 **on the Security channel**) | Security |
+| `ps_blocks` | PowerShell script blocks (4104) | PowerShell |
+| `ps_len_max` | max scriptBlockText length | PowerShell |
+| `dst_ip_unique` | distinct destination IPs | Suricata |
+| `dport_unique` | distinct destination ports | Suricata |
+| `dns_unique` | distinct queried domains (v2+v3) | Suricata |
+| `tls_unique` | distinct TLS servers (SNI, else cert subject/SAN) | Suricata |
+| `http_reqs` | HTTP requests | Suricata |
+| `flow_out` | bytes to server (**flow events only**) | Suricata |
+| `flow_in` | bytes to client (**flow events only**) | Suricata |
 
-## NO son características del modelo (protocolo §7)
-- `entity`, `win` → claves de agrupación.
-- `label` → etiqueta de evaluación (del registro de ataques, nunca de alertas).
-- `diag_suri_alerts`, `diag_wazuh_alerts_lvl8plus` → derivadas de reglas; se
-  guardan solo para diagnóstico/línea base. Un modelo híbrido que las use se
-  reporta **aparte** y se declara así.
-- `profile`, `session_id`, nombres de escenario de las sesiones benignas →
-  **nunca** entran (serían un atajo para distinguir ataque de normal).
+## Comparability with FIM (why there is no single total count)
+Volume is captured **per source** (`n_win_events`, `n_suri_events`), never as one
+total. On 27-oct FIM was extended (Documents/Downloads), so FIM/`syscheck` event
+volume changed mid-dataset. A single total-event feature would therefore be
+**incomparable across that boundary**. FIM and any other non-modelled source land
+in `diag_other_events` (diagnostic), outside the model. To compare periods: use
+per-source counts and the coverage manifest, not a total. Do not use
+`config_version` as a feature.
 
-## Pendiente (cuando haya datos y manifiesto)
-- Indicador de **cobertura por fuente** por ventana (sensor ausente ≠ 0):
-  columna por fuente que marque si ese sensor estaba activo en la ventana.
-- Entropía del dominio DNS y regularidad de intervalos (beaconing) — se añaden
-  solo si aportan en calibración; cualquier alta de feature re-versiona este
-  archivo.
+## NOT model features (protocol §7)
+- `entity`, `win` → grouping keys.
+- `label` → evaluation label (from the attack registry, never from alerts).
+- `excluded` → window dropped from training (prep/cleanup/attempted/failed).
+- `diag_total_events` → all events in the window (incl. FIM) — diagnostic.
+- `diag_other_events` → FIM/syscheck and any non-modelled source — diagnostic.
+- `diag_suri_alerts`, `diag_wazuh_alerts_lvl8plus` → rule-derived — diagnostic.
+- `profile`, `session_id`, scenario names from benign sessions → **never** inputs.
+
+## Pending (when data + manifest exist)
+- Per-source **coverage indicator** per window (sensor absent ≠ 0).
+- DNS entropy and inter-flow regularity (beaconing) — added only if they help in
+  calibration; any feature added re-versions this file.
