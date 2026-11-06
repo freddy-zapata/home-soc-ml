@@ -83,6 +83,22 @@ def dns_query(s):
     return None
 
 
+def tls_server(s):
+    """TLS server identity: SNI if present, else certificate subject / SAN.
+    Suricata in this lab logs cert fields (subject/subjectaltname), not sni."""
+    tls = g(s, "data", "tls")
+    if not isinstance(tls, dict):
+        return None
+    if tls.get("sni"):
+        return tls["sni"]
+    if tls.get("subject"):
+        return tls["subject"]
+    san = tls.get("subjectaltname")
+    if isinstance(san, list) and san:
+        return san[0]
+    return None
+
+
 def flatten(s):
     loc = s.get("location")
     src = source_of(loc)
@@ -114,7 +130,7 @@ def flatten(s):
         "suri_dport": g(s, "data", "dest_port"),
         "suri_proto": g(s, "data", "proto"),
         "dns_q": dns_query(s),
-        "tls_sni": g(s, "data", "tls", "sni"),
+        "tls_sni": tls_server(s),
         "http_host": g(s, "data", "http", "hostname"),
         "flow_toserver": g(s, "data", "flow", "bytes_toserver") if is_flow else None,
         "flow_toclient": g(s, "data", "flow", "bytes_toclient") if is_flow else None,
